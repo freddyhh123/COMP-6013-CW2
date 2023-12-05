@@ -19,13 +19,14 @@ epoch_sizes <- c(100, 1000, 10000)
 
 
 models <- vector(length = length(train_sizes))
-columns = c("train_size", "learning_rate", "epoch_size", "accuracy", "f1","precision","recall")
+columns = c("train_size", "learning_rate", "epoch_size","accuracy_testing", "accuracy_validation", "f1_validation","precision","recall")
 model_accuracy <- data.frame(matrix(nrow = (length((train_sizes))*length(learning_rates)*length(epoch_sizes))), ncol = 7)
 
 
 for (train_size in 1:length(train_sizes)) {
   for (learning_rate in 1:length(learning_rates)) {
     for (epoch_size in 1:length(epoch_sizes)) {
+      row <- c(train_sizes[train_size], learning_rates[learning_rate], epoch_sizes[epoch_size])
       #Randomly shuffle the dataset rows (repeatedly shuffled for 5 times)
       rows_count <- nrow(penguins)
 
@@ -57,7 +58,7 @@ for (train_size in 1:length(train_sizes)) {
       num_of_epochs <- epoch_sizes[epoch_size]  #Ideally, run with 1000 number of epochs but 1000 takes considerable amount (>10 min) to train
 
       #plot Learning Curve - Accuracy vs Training Sample size
-      plot_learning_curve(p_model, penguins_train, penguins_validation, number_of_iterations = num_of_epochs)
+      row <- c(row,plot_learning_curve(p_model, penguins_train, penguins_validation, number_of_iterations = num_of_epochs))
 
       #plot Learning Curve - Accuracy vs Number of Epochs (Iterations)
       plot_learning_curve_epochs(p_model, penguins_train, penguins_validation)
@@ -70,10 +71,11 @@ for (train_size in 1:length(train_sizes)) {
       #Cross_Validate(ml_model, dataset, num_of_iterations, num_of_folds)
 
       #Validate results with held out validation dataset
-      row <- c(train_sizes[train_size], learning_rates[learning_rate], epoch_sizes[epoch_size], Validate(p_model, penguins_train, penguins_validation, number_of_iterations = 10))
+      row <- c(row, Validate(p_model, penguins_train, penguins_validation, number_of_iterations = 10))
       print(row)
       model_accuracy[nrow(model_accuracy) + 1, ] <- row
     }
+    model_accuracy.paste(epoch_sizes[epoch_size],learning_rates[learning_rate]) = model_accuracy[]
+    plot(x=model_accuracy['epoch'])
   }
 }
-1<-1

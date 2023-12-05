@@ -14,7 +14,7 @@ plot_learning_curve <- function(ml_model, train_dataset, validation_dataset, num
   num_of_iterations <- 10
   
   #1/10th sample size
-  train_sample_size = nrow(train_dataset)/ 10
+  train_sample_size = nrow(train_dataset) / 10
   
   for(m in 1:10){
     upper_limit <- m*train_sample_size
@@ -34,7 +34,7 @@ plot_learning_curve <- function(ml_model, train_dataset, validation_dataset, num
     for(k in 1:num_of_iterations){
       for(i in 1:train_rows){
         actual_class <- as.character(df_train_labels[i])
-        feature_row<-matrix(df_train_features[i,], nrow = 1, ncol = 4)
+        feature_row <- matrix(df_train_features[i,], nrow = 1, ncol = 4)
         feature_row <- unlist(feature_row)
         predicted_class <- ml_model$train(actual_class, feature_row)
         if(actual_class == predicted_class){
@@ -43,13 +43,14 @@ plot_learning_curve <- function(ml_model, train_dataset, validation_dataset, num
         total <- total + 1
       }
     }
-    accuracy_training <- c(accuracy_training, correct/ total)
+    accuracy_training <- c(accuracy_training, correct / total)
     
   }
   library(ggplot2)
   loc_data <- data.frame(training_sample = seq(10,100,by=10), accuracy = accuracy_training)
   ggplot(loc_data) + geom_line(mapping = aes(x=training_sample, y = accuracy)) + ylim(0:1) +
     labs(x = 'training sample size (%)', y = 'Accuracy')
+  return(mean(accuracy_training))
   
 }
 
