@@ -13,16 +13,24 @@ penguinsMove <- cbind(penguins[2:5], penguinsMove)
 
 penguins <- penguinsMove
 
-train_sizes <- c(30, 40, 50, 60, 70, 80)
-learning_rates <- c(0.001, 0.01, 0.1, 0.25, 0.5)
-epoch_sizes <- c(100, 1000, 10000)
+train_sizes <- c(40, 50, 60, 70, 80)
+learning_rates <- c(0.001, 0.01, 0.25, 0.5)
+epoch_sizes <- c(100, 500, 1000, 2500, 5000)
 
 
 models <- vector(length = length(train_sizes))
-columns = c("train_size", "learning_rate", "epoch_size","accuracy_testing", "accuracy_validation", "f1_validation","precision","recall")
-model_accuracy <- data.frame(matrix(nrow = (length((train_sizes))*length(learning_rates)*length(epoch_sizes))), ncol = 7)
+model_accuracy <- data.frame(
+  train_size = numeric(),
+  learning_rate = numeric(),
+  epoch_size = numeric(),
+  accuracy_testing = numeric(),
+  accuracy_validation = numeric(),
+  f1_validation = numeric(),
+  precision = numeric(),
+  recall = numeric()
+  )
 
-
+count <- 1
 for (train_size in 1:length(train_sizes)) {
   for (learning_rate in 1:length(learning_rates)) {
     for (epoch_size in 1:length(epoch_sizes)) {
@@ -73,9 +81,9 @@ for (train_size in 1:length(train_sizes)) {
       #Validate results with held out validation dataset
       row <- c(row, Validate(p_model, penguins_train, penguins_validation, number_of_iterations = 10))
       print(row)
-      model_accuracy[nrow(model_accuracy) + 1, ] <- row
+      model_accuracy[count,] <- row
+      write.csv(model_accuracy, "./main.csv", row.names = FALSE)
+      count <- count + 1
     }
-    model_accuracy.paste(epoch_sizes[epoch_size],learning_rates[learning_rate]) = model_accuracy[]
-    plot(x=model_accuracy['epoch'])
   }
 }

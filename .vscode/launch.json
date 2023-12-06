@@ -6,10 +6,11 @@
     "configurations": [
         {
             "type": "R-Debugger",
-            "name": "Launch R-Workspace",
+            "name": "Debug Graphs",
             "request": "launch",
-            "debugMode": "workspace",
-            "workingDirectory": "${workspaceFolder}"
+            "debugMode": "file",
+            "workingDirectory": "${workspaceFolder}",
+            "file": "graphing.r"
         },
         {
             "type": "R-Debugger",
