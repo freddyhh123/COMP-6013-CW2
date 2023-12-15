@@ -22,7 +22,6 @@ Perceptron <- function(learning_rate){
 
     #Compute weighted sum of inputs and synaptic weights (dot product of weights and inputs) 
     # for each class, and find the class with maximum value
-    
     names(which.max(lapply(label_weights, matrix_dot_product, feature_set)))
   }
 
@@ -93,7 +92,7 @@ Perceptron <- function(learning_rate){
       #Back propagate the error in case of incorrect prediction,
       #here the synaptic weights are updated according to contribution of each input
       #so that perceptron "learns" to classify over a period of time (iterations)
-    
+      
       if(predicted_label != actual_label){
         backpropagate(actual_label, predicted_label, features)
       }

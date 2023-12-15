@@ -22,6 +22,22 @@
         },
         {
             "type": "R-Debugger",
+            "name": "Multi Layer",
+            "request": "launch",
+            "debugMode": "file",
+            "workingDirectory": "${workspaceFolder}",
+            "file": "Multi_layer.r"
+        },
+        {
+            "type": "R-Debugger",
+            "name": "Multi Layer 2",
+            "request": "launch",
+            "debugMode": "file",
+            "workingDirectory": "${workspaceFolder}",
+            "file": "Multi_layer_2.r"
+        },
+        {
+            "type": "R-Debugger",
             "name": "Debug R-Function",
             "request": "launch",
             "debugMode": "function",

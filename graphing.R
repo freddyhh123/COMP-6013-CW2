@@ -27,6 +27,6 @@ for (learning_rate in 1:length(learning_rates)) {
         ggtitle(paste("Train and Validation accuracy for learning rate: ",name_row$learning_rate," and train size: ",name_row$train_size)) +
         scale_color_manual(labels = c("Validation","Train"),values = c("deepskyblue1", "deeppink1")) +
         theme(legend.title.align=0.5) 
-    ggsave(filename = paste(name_row$learning_rate,"-",name_row$train_size,".png"))
+     ggsave(filename = paste(name_row$learning_rate,"-",name_row$train_size,".png"))
   }
 }
