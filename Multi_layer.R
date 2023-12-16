@@ -1,3 +1,6 @@
+library(dplyr)
+library(ggplot2)
+
 one_hot_encode <- function(vector) {
   # Find unique categories
   categories <- unique(vector)
@@ -23,7 +26,7 @@ decode_one_hot <- function(vector) {
 
 # Define the softmax function
 softmax <- function(z) {
-  exp_z <- exp(z)
+  exp_z <- exp(z) #np.exp(inputs) - np.max(inputs, axis=1, keepdims=True)
   softmax_output <- exp_z / sum(exp_z)
   return(softmax_output)
 }
@@ -33,32 +36,49 @@ softmax_derivative <- function(softmax_output, target) {
   softmax_output - target
 }
 
-relu <- function(x) {
-  pmax(0, x)
+leaky_relu <- function(x, alpha = 0.01) {
+  return(ifelse(x > 0, x, alpha * x))
 }
-relu_derivative <- function(x) {
-  ifelse(x > 0, 1, 0)
+leaky_relu_derivative <- function(x, alpha = 0.01) {
+  return(ifelse(x > 0, 1, alpha))
 }
-standardize <- function(x) {
-  (x - mean(x)) / sd(x)
+
+standardize_data <- function(data) {
+  # Ensure data is a dataframe or matrix
+  if (!is.data.frame(data) && !is.matrix(data)) {
+    stop("Input must be a dataframe or matrix.")
+  }
+
+  standardized_data <- as.data.frame(lapply(data, function(x) {
+    if (is.numeric(x)) {
+      (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+    } else {
+      x  # Skip non-numeric columns
+    }
+  }))
+
+  return(standardized_data)
+}
+
+cross_entropy_loss <- function(predictions, labels) {
+  return(-logb(predictions[which.max(labels)]))
 }
 
 # Define the function to initialize weights and biases
 initialize_weights <- function(input_size, hidden_size, output_size) {
   list(
-    input_weights = matrix(runif(input_size * hidden_size), nrow = input_size, ncol = hidden_size),
-    hidden_biases = matrix(runif(hidden_size), nrow = 1, ncol = hidden_size),
-    hidden_weights = matrix(runif(hidden_size * output_size), nrow = hidden_size, ncol = output_size),
-    output_biases = matrix(runif(output_size), nrow = 1, ncol = output_size)
+    input_weights = matrix(rnorm(input_size * hidden_size, mean = 0, sd = sqrt(2 / input_size)), input_size, hidden_size),
+    hidden_biases = matrix(0, 1, hidden_size),
+    hidden_weights = matrix(rnorm(hidden_size * output_size, mean = 0, sd = sqrt(1 / hidden_size)), hidden_size, output_size),
+    output_biases = matrix(0, 1, output_size)
   )
 }
 
 # Define the forward pass function
 forward_pass <- function(inputs, weights) {
-  inputs <- standardize(inputs)
   # Compute hidden layer output
   hidden_linear_combination <- inputs %*% t(weights$input_weights) + weights$hidden_biases
-  hidden_layer_output <- relu(hidden_linear_combination)
+  hidden_layer_output <- leaky_relu(hidden_linear_combination)
 
   # Compute output layer input and output
   output_layer_input <- hidden_layer_output %*% weights$hidden_weights + weights$output_biases
@@ -70,9 +90,13 @@ forward_pass <- function(inputs, weights) {
   )
 }
 
-backpropagation <- function(inputs, actual_output, weights, learning_rate) {
+backpropagation <- function(inputs, actual_output, weights, learning_rate, epoch) {
   forward_pass_results <- forward_pass(inputs, weights)
-  inputs <- standardize(inputs)
+
+  loss = cross_entropy_loss(forward_pass_results$output_layer_output, actual_output)
+  
+  #plot(loss_list$epoch, loss_list$loss, type = 'l')
+
   # Unpack the forward pass results
   hidden_layer_output <- forward_pass_results$hidden_layer_output
   output_layer_output <- forward_pass_results$output_layer_output
@@ -81,12 +105,12 @@ backpropagation <- function(inputs, actual_output, weights, learning_rate) {
   output_error <- output_layer_output - actual_output
 
   # Gradient calculation for output layer
-  output_weights_gradient <- matrix(t(hidden_layer_output)) %*% as.numeric(output_error)
+  output_weights_gradient <- t(hidden_layer_output) %*% as.numeric(output_error)
   output_biases_gradient <- colSums(output_error)
 
   # Backpropagate the error to the hidden layer
-  hidden_error <- (weights$hidden_weights %*% matrix(as.numeric(output_error), ncol = 1)) * relu_derivative(hidden_layer_output)
-
+  hidden_error <- (weights$hidden_weights %*% matrix(as.numeric(output_error), ncol = 1)) * as.numeric(leaky_relu_derivative(hidden_layer_output))
+  print(as.numeric(leaky_relu_derivative(hidden_layer_output)))
   # Gradient calculation for hidden layer
   # Ensure inputs is a row vector for multiplication
   input_weights_gradient <- matrix(inputs, nrow = 1) %*% hidden_error
@@ -98,7 +122,7 @@ backpropagation <- function(inputs, actual_output, weights, learning_rate) {
   weights$hidden_weights <- weights$hidden_weights - learning_rate * output_weights_gradient
   weights$output_biases <- weights$output_biases - learning_rate * output_biases_gradient
 
-  return(weights)
+  return(list(weights = weights, loss = loss))
 }
 
 # Define the training function
@@ -107,14 +131,25 @@ train_mlp <- function(inputs, targets, hidden_size, learning_rate, num_epochs) {
 
   weights <- initialize_weights(input_size, hidden_size, 3)
 
-  for (epoch in 1:num_epochs) {
+  loss_frame <- data.frame(
+        loss = numeric(),
+        epoch = numeric()
+  )
+  for (epoch in 1:100) {
     for (i in 1:nrow(inputs)) {
       input_data <- inputs[i, , drop = FALSE]
       target_data <- targets[i,]
-      weights <- backpropagation(input_data, target_data, weights, learning_rate)
+      results <- backpropagation(input_data, target_data, weights, 0.01, epoch)
+      weights <- results$weights
+      loss <- results$loss
+      if(is.na(loss)){
+        browser()
+      }
+      loss_frame[nrow(loss_frame) + 1, ] = c(loss,epoch)
+      print(paste("loss: ",loss," Epoch: ",epoch))
     }
   }
-  return(weights)
+  return(list(weights = weights, loss = loss_frame))
 }
 
 train_sizes <- c(40, 50, 60, 70, 80)
@@ -128,10 +163,10 @@ penguins <- penguins[, c(3, 10, 11, 12, 13, 14)]
 
 penguins <- na.omit(penguins)
 
-#penguins[, c(2, 3, 4, 5)] <- scale(penguins[, c(2, 3, 4, 5)], scale=TRUE)
+penguins_standardised <- standardize_data(penguins[2:5])
 
 penguinsMove <- penguins[, 1]
-penguinsMove <- cbind(penguins[2:5], penguinsMove)
+penguinsMove <- cbind(penguins_standardised, penguinsMove)
 
 penguins <- penguinsMove
 
@@ -179,7 +214,9 @@ for (train_size in train_sizes) {
 
     for(epoch_size in epoch_sizes){
       row <- c(train_size, learning_rate, epoch_size)
-      mlp_weights <- train_mlp(as.matrix(penguins_train[, 1:4]),penguins_train[,6:8], 4, learning_rate, epoch_size)
+      results <- train_mlp(as.matrix(penguins_train[, 1:4]),penguins_train[,6:8], 4, 0.001, epoch_size)
+      mlp_weights <- results$weights
+      loss <- results$loss
 
       for(row in validation_instances){
         actual <- as.matrix(penguins_validation[row,][5:8])
@@ -192,10 +229,17 @@ for (train_size in train_sizes) {
         predictions <- rbind(predictions, data.frame(actual = which.max(actual), predict= which.max(prediction)))
       }
       saveRDS(mlp_weights, paste(train_size,learning_rate,epoch_size,"mlp_weights.rds", sep = "-"))
+      average_loss_per_epoch <- loss %>%
+        group_by(epoch) %>%
+        summarise(average_loss = mean(loss))
+
+      epoch_plot -> ggplot(average_loss_per_epoch, aes(x = epoch, y = average_loss)) +
+        geom_line() +   # for a line plot
+        labs(title = "Average Loss per Epoch", x = "Epoch", y = "Average Loss") +
+        theme_minimal()
     }
 
     # Evaluate and collect results
-
     model_accuracy[count, ] <- row
     write.csv(model_accuracy, "./main.csv", row.names = FALSE)
   }
