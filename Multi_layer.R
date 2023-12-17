@@ -240,15 +240,16 @@ penguinsMove <- cbind(penguins_standardised, penguinsMove)
 penguins <- penguinsMove
 
 # Setup the dataframe for logging
-model_accuracy <- data.frame(
-  train_size = numeric(),
-  learning_rate = numeric(),
-  epoch_size = numeric(),
-  accuracy_testing = numeric(),
-  accuracy_validation = numeric(),
-  f1_validation = numeric(),
-  precision = numeric(),
-  recall = numeric()
+model_data <- data.frame(
+    train_size = numeric(),
+    learning_rate = numeric(),
+    epoch_size = numeric(),
+    average_training_accuracy = numeric(),
+    average_validation_accuracy = numeric(),
+    f1_validation = numeric(),
+    precision = numeric(),
+    recall = numeric(),
+    average_loss = numeric()
 )
 
 
@@ -279,17 +280,6 @@ for (train_size in train_sizes) {
     predictions <- data.frame(
       actual = numeric(),
       predict = numeric()
-    )
-    epoch_data <- data.frame(
-      train_size = numeric(),
-      learning_rate = numeric(),
-      epoch_size = numeric(),
-      average_training_accuracy = numeric(),
-      average_validation_accuracy = numeric(),
-      f1_validation = numeric(),
-      precision = numeric(),
-      recall = numeric(),
-      average_loss = numeric()
     )
     for (epoch_size in epoch_sizes) {
       # Confusion Matrix
@@ -352,17 +342,17 @@ for (train_size in train_sizes) {
       f1_score <- (precision * recall) / 2
 
       # This is our main information row, its what will be saved to a CSV
-      epoch_data[nrow(epoch_data) + 1, ] <- c(train_size, learning_rate, epoch_size, results$accuracy, correct_predictions, f1_score, precision, recall, mean(average_loss_per_epoch$average_loss))
+      model_data[nrow(model_data) + 1, ] <- c(train_size, learning_rate, epoch_size, results$accuracy, correct_predictions, f1_score, precision, recall, mean(average_loss_per_epoch$average_loss))
       print(paste("Epoch Size:",epoch_size, "Complete!"))
       print(paste("Training Accuracy:",results$accuracy,"Validation accuracy:", correct_predictions))
       print(paste("F1 Score:", f1_score))
       print(paste("Loss:", mean(average_loss_per_epoch$average_loss)))
-      print(paste("Epochs completed:",nrow(epoch_data),"/",length(epoch_sizes)))
+      print(paste("Epochs completed:",nrow(model_data),"/",length(epoch_sizes)))
       cat("\n")
     }
     print(paste("Learning Rate:",learning_rate, "Complete!"))
     cat("\n")
-    write.csv(epoch_data, "./main_MLP.csv", row.names = FALSE)
+    write.csv(model_data, "./main_MLP.csv", row.names = FALSE)
     print(paste("CSV Written!"))
     cat("\n")
   }
