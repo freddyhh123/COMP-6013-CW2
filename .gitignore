@@ -1,2 +1,4 @@
 *.csv
 /Graphs*
+*.png
+*.rds
