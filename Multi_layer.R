@@ -339,7 +339,7 @@ for (train_size in train_sizes) {
       FN <- confusion_matrix[2, 3] + confusion_matrix[3, 2] + confusion_matrix[3, 1]
       precision <- TP / (TP + FP)
       recall <- TP / (TP + FN)
-      f1_score <- (precision * recall) / 2
+      f1_score <- 2 * (precision * recall) / (precision + recall)
 
       # This is our main information row, its what will be saved to a CSV
       model_data[nrow(model_data) + 1, ] <- c(train_size, learning_rate, epoch_size, results$accuracy, correct_predictions, f1_score, precision, recall, mean(average_loss_per_epoch$average_loss))
@@ -349,11 +349,11 @@ for (train_size in train_sizes) {
       print(paste("Loss:", mean(average_loss_per_epoch$average_loss)))
       print(paste("Epochs completed:",nrow(model_data),"/",length(epoch_sizes)))
       cat("\n")
+      write.csv(model_data, "./main_MLP.csv", row.names = FALSE)
+      print(paste("CSV Written!"))
+      cat("\n")
     }
     print(paste("Learning Rate:",learning_rate, "Complete!"))
-    cat("\n")
-    write.csv(model_data, "./main_MLP.csv", row.names = FALSE)
-    print(paste("CSV Written!"))
     cat("\n")
   }
     print(paste("Train Size:",train_size, "Complete!"))
